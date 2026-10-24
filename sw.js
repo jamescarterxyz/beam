@@ -3,7 +3,8 @@
 
 var CACHE = "beam-v1";
 var SHELL = ["./", "./index.html", "./style.css", "./app.js",
-             "./manifest.json"];
+             "./manifest.json", "./vendor/peerjs.min.js",
+             "./vendor/qrcode.min.js"];
 
 self.addEventListener("install", function (event) {
   event.waitUntil(
