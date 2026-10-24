@@ -31,7 +31,8 @@
 
   var peer = null;
   var conn = null;
-  var incomingFile = null;
+  var connectTimer = null;
+  var incomingFile = null; // { name, size, type, chunks: [], received: 0 }
 
   function setStatus(state, message) {
     statusDot.className = "dot " + state;
@@ -40,6 +41,20 @@
 
   function randomId() {
     return "beam-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  // Keep the same code on this browser across reloads, so a QR code
+  // scanned earlier does not go stale just because the page refreshed.
+  function getPeerId() {
+    try {
+      var saved = localStorage.getItem("beam-peer-id");
+      if (saved) return saved;
+      var id = randomId();
+      localStorage.setItem("beam-peer-id", id);
+      return id;
+    } catch (e) {
+      return randomId();
+    }
   }
 
   function playWhoosh() {
@@ -131,6 +146,7 @@
   function bindConnection(connection) {
     conn = connection;
     conn.on("open", function () {
+      clearTimeout(connectTimer);
       setStatus("ok", "Connected ✓ — you can beam now.");
     });
     conn.on("data", handleData);
@@ -144,6 +160,16 @@
     if (!id) return;
     setStatus("busy", "Connecting…");
     bindConnection(peer.connect(id.trim()));
+    // If the other side never answers, say so plainly instead of
+    // spinning forever — usually the code is stale or that tab closed.
+    clearTimeout(connectTimer);
+    connectTimer = setTimeout(function () {
+      if (!conn || !conn.open) {
+        setStatus("bad", "Still connecting… Is the other device's Beam " +
+          "page still open with this same code? Re-scan its fresh QR " +
+          "code and try again.");
+      }
+    }, 10000);
   }
 
   function sendFile(file) {
@@ -163,6 +189,7 @@
     });
   }
 
+  // --- wire up the UI ------------------------------------------------
   copyIdBtn.onclick = function () {
     navigator.clipboard.writeText(myIdEl.textContent);
     copyIdBtn.textContent = "Copied ✓";
@@ -189,6 +216,7 @@
     sendFile(fileInput.files[0]);
   };
 
+  // Restore locally saved texts from earlier sessions.
   try {
     JSON.parse(localStorage.getItem("beam-texts") || "[]")
       .forEach(function (item) {
@@ -200,12 +228,13 @@
       });
   } catch (e) { /* ignore */ }
 
+  // --- start the peer -------------------------------------------------
   if (typeof Peer === "undefined") {
     setStatus("bad", "Could not load the connection library. " +
       "Check your internet connection and reload.");
     return;
   }
-  peer = new Peer(randomId());
+  peer = new Peer(getPeerId());
   peer.on("open", function (id) {
     myIdEl.textContent = id;
     var base = window.location.href.split("?")[0];
@@ -223,8 +252,14 @@
   });
   peer.on("connection", bindConnection);
   peer.on("error", function (err) {
-    setStatus("bad", "Connection problem: " + err.type +
-      ". Reload and try again — strict networks sometimes block P2P.");
+    clearTimeout(connectTimer);
+    if (err.type === "peer-unavailable") {
+      setStatus("bad", "That code is not online — the other device may " +
+        "have closed Beam or reloaded. Scan its fresh QR code and try again.");
+    } else {
+      setStatus("bad", "Connection problem: " + err.type +
+        ". Reload and try again — strict networks sometimes block P2P.");
+    }
   });
 
   if ("serviceWorker" in navigator) {
