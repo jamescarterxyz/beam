@@ -173,7 +173,10 @@
   }
 
   function sendFile(file) {
-    if (!conn) { alert("Connect to another device first."); return; }
+    if (!conn || !conn.open) {
+      alert("Not connected yet — wait until the status shows Connected ✓.");
+      return;
+    }
     conn.send({ type: "file-meta", name: file.name, size: file.size,
                 type: file.type });
     file.arrayBuffer().then(function (buffer) {
@@ -199,7 +202,10 @@
   connectBtn.onclick = function () { connectTo(peerIdInput.value); };
 
   sendTextBtn.onclick = function () {
-    if (!conn) { alert("Connect to another device first."); return; }
+    if (!conn || !conn.open) {
+      alert("Not connected yet — wait until the status shows Connected ✓.");
+      return;
+    }
     var text = textInput.value;
     if (!text.trim()) return;
     conn.send({ type: "text", text: text });
@@ -209,6 +215,10 @@
   };
 
   sendFileBtn.onclick = function () {
+    if (!conn || !conn.open) {
+      alert("Not connected yet — wait until the status shows Connected ✓.");
+      return;
+    }
     if (!fileInput.files.length) {
       alert("Choose a file first.");
       return;
