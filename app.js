@@ -263,6 +263,16 @@
   peer.on("connection", bindConnection);
   peer.on("error", function (err) {
     clearTimeout(connectTimer);
+    if (err.type === "unavailable-id") {
+      // Two tabs in the same browser share one stored code, so the
+      // second tab collides. Drop the stored code and reload once
+      // for a fresh one.
+      try { localStorage.removeItem("beam-peer-id"); } catch (e) {}
+      setStatus("bad", "This code is already open in another tab — " +
+        "getting a fresh one…");
+      setTimeout(function () { window.location.reload(); }, 1200);
+      return;
+    }
     if (err.type === "peer-unavailable") {
       setStatus("bad", "That code is not online — the other device may " +
         "have closed Beam or reloaded. Scan its fresh QR code and try again.");
