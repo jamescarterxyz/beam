@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beam — send text & files between devices, no account</title>
+<meta name="description" content="Beam text and files straight from one device to another over a direct peer-to-peer connection. No account, no server seeing your content.">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<main>
+  <header>
+    <h1>⚡ Beam</h1>
+    <p class="tagline">Send text &amp; files to another device. No account.
+      No server reading your stuff. Just scan &amp; whoosh.</p>
+  </header>
+  <section id="status" class="card">
+    <span id="statusDot" class="dot idle"></span>
+    <span id="statusText">Starting…</span>
+  </section>
+  <section class="card">
+    <h2>1 · Connect</h2>
+    <p>On the <strong>other</strong> device, open Beam and scan this QR code —
+      or type this code there:</p>
+    <div id="qrcode"></div>
+    <p class="myid">Your code: <strong id="myId">…</strong>
+      <button id="copyId">Copy</button></p>
+    <div class="row">
+      <input id="peerIdInput" type="text" placeholder="Or paste a code here">
+      <button id="connectBtn">Connect</button>
+    </div>
+    <p class="hint">Tip: scanning the QR opens Beam on the other device and
+      connects automatically.</p>
+  </section>
+  <section class="card" id="sendCard">
+    <h2>2 · Beam it</h2>
+    <label for="textInput">Text</label>
+    <textarea id="textInput" rows="3"
+      placeholder="Type or paste something to beam…"></textarea>
+    <button id="sendTextBtn">Beam text ⚡</button>
+    <label for="fileInput">File</label>
+    <input id="fileInput" type="file">
+    <button id="sendFileBtn">Beam file ⚡</button>
+    <div id="progress" class="progress"></div>
+  </section>
+  <section class="card">
+    <h2>📥 Received</h2>
+    <ul id="history"></ul>
+    <p id="emptyNote" class="hint">Nothing beamed yet. Received text stays
+      only on this device.</p>
+  </section>
+  <footer>
+    <p>Beam is peer-to-peer: your text and files travel directly between
+      the two devices. The signaling server only introduces them, then
+      steps aside. <a href="https://github.com/jamescarterxyz/beam">Open source</a> ·
+      v1 does not yet add end-to-end encryption — use it for everyday
+      stuff, not secrets.</p>
+  </footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
